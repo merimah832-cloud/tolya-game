@@ -23,7 +23,10 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen, onEna
 
             {/* Developer Mode Trigger */}
             <div
-                className="absolute top-4 left-1/2 -translate-x-1/2 z-50 text-white/20 hover:text-white/50 cursor-pointer text-xl font-black p-2 transition-colors select-none"
+                className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 cursor-pointer font-black transition-all select-none flex items-center justify-center
+                    ${showDebug
+                        ? 'text-white bg-red-600 border-4 border-white scale-125 text-5xl w-24 h-24 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.9)] animate-bounce'
+                        : 'text-white/10 hover:text-white/30 text-xl p-2'}`}
                 onClick={() => {
                     const pass = window.prompt("Введите код разработчика:");
                     if (pass === "1345") {
@@ -33,6 +36,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen, onEna
                 }}
             >
                 !
+                {showDebug && <span className="absolute -bottom-8 text-[10px] font-bold bg-black/80 px-2 py-0.5 rounded whitespace-nowrap">DEV MODE</span>}
             </div>
 
             {/* Debug Toggle (Click anywhere empty to toggle visibility of zones) */}
