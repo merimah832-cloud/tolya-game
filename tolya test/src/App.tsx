@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, RotateCcw, Pause as PauseIcon, Play as PlayIcon, Maximize2, Cloud as CloudIcon, Skull, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { RotateCcw, Sparkles, Cloud as CloudIcon, Skull, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react';
 import { BedImage, TolyaImage, TreeObject, WinImage } from './components/GameAssets';
 import StartMenu from './components/StartMenu';
 
@@ -254,7 +254,7 @@ export function App() {
       gameStateRef.current = 'paused';
     }
 
-    // Reset position but keep total score progress
+    // Reset position but keep total score progress AND Developer Mode
     tolyaRef.current = {
       ...tolyaRef.current,
       x: 50,
@@ -267,6 +267,7 @@ export function App() {
     obstaclesRef.current = [];
     isMinibossActiveRef.current = false;
     hasSpawnedMinibossRef.current = false;
+    // NOTE: isDevModeRef is NOT reset here - it persists across levels
 
     gameStateRef.current = 'playing';
     setGameState('playing');
@@ -639,7 +640,7 @@ export function App() {
 
           {/* Level 2 Intro Screen */}
           {showLevel2Intro && (
-            <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center bg-no-repeat bg-center bg-cover" style={{ backgroundImage: "url('./assets/lvl2.png')" }}>
+            <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center bg-no-repeat bg-center bg-cover" style={{ backgroundImage: "url('/assets/lvl2.png')" }}>
               <div className="bg-black/40 backdrop-blur-md p-10 rounded-3xl border border-white/20 shadow-2xl">
                 <h1 className="text-6xl font-black text-white mb-4 uppercase tracking-tighter drop-shadow-2xl">
                   LEVEL 2
@@ -663,24 +664,26 @@ export function App() {
 
           {/* Won Scene */}
           {gameState === 'won' && (
-            <div className="absolute inset-0 bg-emerald-800/90 z-20 flex flex-col items-center justify-center animate-in fade-in duration-1000 p-8">
-              <WinImage />
-              <h2 className="text-4xl font-bold text-emerald-100 mt-8 text-center drop-shadow-lg">Толя нашел лунку!</h2>
-              <button
-                onClick={startGame}
-                className="mt-8 flex items-center gap-2 px-6 py-3 bg-white text-emerald-800 rounded-full font-bold hover:bg-emerald-100 transition-colors shadow-lg transform hover:scale-105 active:scale-95"
-              >
-                <RotateCcw size={20} /> Играть снова
-              </button>
-
-              {showLevel2Button && (
+            <div className="absolute inset-0 bg-emerald-800/90 z-20 flex flex-col items-center justify-center animate-in fade-in duration-1000 p-4 overflow-y-auto">
+              <div className="flex flex-col items-center justify-center max-w-2xl w-full">
+                <WinImage />
+                <h2 className="text-4xl font-bold text-emerald-100 mt-8 text-center drop-shadow-lg">Толя нашел лунку!</h2>
                 <button
-                  onClick={() => startLevel(2)}
-                  className="mt-4 flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-full font-black text-xl hover:bg-indigo-700 transition-all shadow-xl transform scale-110 hover:scale-125 active:scale-95 animate-bounce"
+                  onClick={startGame}
+                  className="mt-8 flex items-center gap-2 px-6 py-3 bg-white text-emerald-800 rounded-full font-bold hover:bg-emerald-100 transition-colors shadow-lg transform hover:scale-105 active:scale-95"
                 >
-                  <Play size={24} /> 2 УРОВЕНЬ
+                  <RotateCcw size={20} /> Играть снова
                 </button>
-              )}
+
+                {showLevel2Button && (
+                  <button
+                    onClick={() => startLevel(2)}
+                    className="mt-4 flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-full font-black text-xl hover:bg-indigo-700 transition-all shadow-xl transform hover:scale-110 active:scale-95"
+                  >
+                    <Sparkles size={24} /> LEVEL 2
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
