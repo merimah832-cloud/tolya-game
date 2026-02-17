@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Play, RotateCcw, Pause as PauseIcon, Play as PlayIcon, Maximize2, Cloud as CloudIcon, Skull, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react';
 import { BedImage, TolyaImage, TreeObject, WinImage } from './components/GameAssets';
 import StartMenu from './components/StartMenu';
@@ -27,7 +27,7 @@ const MINIBOSS_SCORE_TRIGGER = 25;
 const MAX_SPEED_SCORE_TRIGGER = 40;
 
 type GameState = 'menu' | 'playing' | 'won' | 'lost' | 'paused';
-type LossReason = 'normal' | 'giant_bed' | 'miniboss';
+type LossReason = 'normal' | 'miniboss' | 'giant' | 'branch';
 
 interface GameObject {
   x: number;
@@ -40,6 +40,7 @@ interface TolyaState extends GameObject {
   vy: number;
   isJumping: boolean;
   direction: 'left' | 'right';
+  canDoubleJump?: boolean; // Added for Level 2
 }
 
 interface Obstacle extends GameObject {
@@ -56,6 +57,11 @@ interface BackgroundObj extends GameObject {
   type: number;
 }
 
+interface Branch extends GameObject {
+  id: number;
+  speed: number;
+}
+
 export function App() {
   const [gameState, setGameState] = useState<GameState>('menu');
   const [lossReason, setLossReason] = useState<LossReason>('normal');
@@ -64,6 +70,9 @@ export function App() {
   const [showWarning, setShowWarning] = useState(false);
   const [hasMushroomPower, setHasMushroomPower] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [level, setLevel] = useState(1);
+  const [showLevel2Button, setShowLevel2Button] = useState(false);
+  const [showLevel2Intro, setShowLevel2Intro] = useState(false);
 
   // Scale handling
   const [scale, setScale] = useState(1);
@@ -74,6 +83,7 @@ export function App() {
   const scoreRef = useRef(0);
   const frameCount = useRef<number>(0);
   const gameStateRef = useRef<GameState>('menu');
+  const levelRef = useRef(1);
   const isMinibossActiveRef = useRef(false);
   const hasSpawnedMinibossRef = useRef(false);
   const hasMushroomPowerRef = useRef(false);
@@ -90,12 +100,15 @@ export function App() {
   });
   const obstaclesRef = useRef<Obstacle[]>([]);
   const bgObjectsRef = useRef<BackgroundObj[]>([]);
+  const branchesRef = useRef<Branch[]>([]);
   const keysPressed = useRef<{ [key: string]: boolean }>({});
   const obstacleIdRef = useRef(0);
+  const branchIdRef = useRef(0);
 
   const [tolya, setTolya] = useState<TolyaState>(tolyaRef.current);
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [bgObjects, setBgObjects] = useState<BackgroundObj[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
 
   // Sync ref with state
   useEffect(() => {
@@ -176,6 +189,16 @@ export function App() {
     return () => window.removeEventListener('touchstart', checkTouch);
   }, []);
 
+  // Level 2 Transition Timer
+  useEffect(() => {
+    if (gameState === 'won' && level === 1) {
+      const timer = setTimeout(() => {
+        setShowLevel2Button(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState, level]);
+
   const startGame = () => {
     // Robust reset: ensure old loop is dead before starting new state
     cancelAnimationFrame(requestRef.current);
@@ -197,14 +220,15 @@ export function App() {
     mushroomPowerCounterRef.current = 0;
 
     const startY = GAME_HEIGHT - GROUND_HEIGHT - TOLYA_HEIGHT;
-    const initialTolya = {
+    const initialTolya: TolyaState = { // Explicitly type initialTolya
       x: 50,
       y: startY,
       width: TOLYA_WIDTH,
       height: TOLYA_HEIGHT,
       vy: 0,
       isJumping: false,
-      direction: 'right' as const
+      direction: 'right' as const,
+      canDoubleJump: false // Initialize canDoubleJump
     };
     tolyaRef.current = initialTolya;
     setTolya(initialTolya);
@@ -216,34 +240,93 @@ export function App() {
     requestRef.current = requestAnimationFrame(gameLoop);
   };
 
+  const startLevel = (levelIndex: number) => {
+    cancelAnimationFrame(requestRef.current);
+    setLevel(levelIndex);
+    levelRef.current = levelIndex;
+    setShowLevel2Button(false);
+
+    if (levelIndex === 2) {
+      setShowLevel2Intro(true);
+      setGameState('paused'); // Wait for intro
+      gameStateRef.current = 'paused';
+    }
+
+    // Reset position but keep total score progress
+    tolyaRef.current = {
+      ...tolyaRef.current,
+      x: 50,
+      y: GAME_HEIGHT - GROUND_HEIGHT - TOLYA_HEIGHT, // Reset Y position
+      vy: 0,
+      isJumping: false,
+      canDoubleJump: false // Reset canDoubleJump
+    };
+
+    obstaclesRef.current = [];
+    isMinibossActiveRef.current = false;
+    hasSpawnedMinibossRef.current = false;
+
+    gameStateRef.current = 'playing';
+    setGameState('playing');
+    requestRef.current = requestAnimationFrame(gameLoop);
+  };
+
   const updatePhysics = () => {
     const tolya = tolyaRef.current;
 
-    let currentSpeed = OBSTACLE_SPEED_NORMAL;
-    if (scoreRef.current >= MAX_SPEED_SCORE_TRIGGER) currentSpeed = OBSTACLE_SPEED_MAX;
-    else if (scoreRef.current >= MINIBOSS_SCORE_TRIGGER) currentSpeed = OBSTACLE_SPEED_FAST;
+    // Difficulty: Speed based on level and score
+    let currentBaseSpeed = levelRef.current === 2 ? 8 : OBSTACLE_SPEED_NORMAL;
+    if (levelRef.current === 1) {
+      if (scoreRef.current >= MAX_SPEED_SCORE_TRIGGER) currentBaseSpeed = OBSTACLE_SPEED_MAX;
+      else if (scoreRef.current >= MINIBOSS_SCORE_TRIGGER) currentBaseSpeed = OBSTACLE_SPEED_FAST;
+    }
+    const obstacleSpeed = currentBaseSpeed;
 
     if (keysPressed.current['ArrowRight']) { tolya.x += MOVEMENT_SPEED; tolya.direction = 'right'; }
     if (keysPressed.current['ArrowLeft']) { tolya.x -= MOVEMENT_SPEED; tolya.direction = 'left'; }
-    if (tolya.x < 0) tolya.x = 0;
-    if (tolya.x + tolya.width > GAME_WIDTH) tolya.x = GAME_WIDTH - tolya.width;
 
-    if ((keysPressed.current['ArrowUp'] || keysPressed.current['Space']) && !tolya.isJumping) {
-      tolya.vy = hasMushroomPowerRef.current ? JUMP_FORCE_POWERED : JUMP_FORCE_NORMAL;
-      tolya.isJumping = true;
+    // Jump: Handle double jump in Level 2
+    if (keysPressed.current['ArrowUp'] || keysPressed.current['Space']) {
+      if (!tolya.isJumping) {
+        tolya.vy = hasMushroomPowerRef.current ? JUMP_FORCE_POWERED : JUMP_FORCE_NORMAL;
+        tolya.isJumping = true;
+        tolya.canDoubleJump = levelRef.current === 2;
+      } else if (tolya.canDoubleJump) {
+        tolya.vy = hasMushroomPowerRef.current ? JUMP_FORCE_POWERED : JUMP_FORCE_NORMAL;
+        tolya.canDoubleJump = false;
+      }
+      delete keysPressed.current['ArrowUp'];
+      delete keysPressed.current['Space'];
     }
 
-    tolya.y += tolya.vy;
     tolya.vy += GRAVITY;
-    const groundY = GAME_HEIGHT - GROUND_HEIGHT - TOLYA_HEIGHT;
-    if (tolya.y >= groundY) { tolya.y = groundY; tolya.vy = 0; tolya.isJumping = false; }
+    tolya.y += tolya.vy;
+
+    if (tolya.y > GAME_HEIGHT - GROUND_HEIGHT - tolya.height) {
+      tolya.y = GAME_HEIGHT - GROUND_HEIGHT - tolya.height;
+      tolya.vy = 0;
+      tolya.isJumping = false;
+      tolya.canDoubleJump = false;
+    }
+
+    // Keep inside bounds
+    tolya.x = Math.max(0, Math.min(tolya.x, GAME_WIDTH - tolya.width));
 
     frameCount.current++;
-    const minSpawnTime = currentSpeed >= OBSTACLE_SPEED_FAST ? 40 : 60;
+    const minSpawnTime = obstacleSpeed >= OBSTACLE_SPEED_FAST ? 40 : 60;
 
     if (frameCount.current > minSpawnTime && Math.random() < 0.02) {
-      // 1. Check for GIANT BED (Boss) spawn FIRST (2% chance at any time)
-      const isGiant = Math.random() < 0.02;
+      // Level-based probabilities
+      let isGiantChance = 0.02;
+      let minibossProbability = 0.25;
+
+      if (levelRef.current === 2) {
+        isGiantChance = 0.01;
+        minibossProbability = (scoreRef.current >= 50 && scoreRef.current <= 55) ? 0.50 : 0.05;
+      }
+
+      // 1. Check for GIANT BED (Boss) spawn FIRST
+      const isGiant = Math.random() < isGiantChance;
 
       if (isGiant) {
         obstaclesRef.current.push({
@@ -259,9 +342,13 @@ export function App() {
           isMushroom: false
         });
       }
-      // 2. Check for MINIBOSS (25% chance after score reaches trigger)
-      else if (isMinibossActiveRef.current && !hasSpawnedMinibossRef.current && Math.random() < 0.25) {
-        hasSpawnedMinibossRef.current = true;
+      // 2. Check for MINIBOSS
+      // Level 1: One-time spawn after trigger. Level 2: Always possible with dynamic probability.
+      else if (
+        (levelRef.current === 1 && isMinibossActiveRef.current && !hasSpawnedMinibossRef.current && Math.random() < minibossProbability) ||
+        (levelRef.current === 2 && Math.random() < minibossProbability)
+      ) {
+        if (levelRef.current === 1) hasSpawnedMinibossRef.current = true;
         for (let i = 0; i < 3; i++) {
           obstaclesRef.current.push({
             x: GAME_WIDTH + (i * 350),
@@ -307,14 +394,51 @@ export function App() {
       });
     }
 
-    bgObjectsRef.current.forEach(obj => obj.x -= currentSpeed * 0.5);
-    bgObjectsRef.current = bgObjectsRef.current.filter(obj => obj.x + obj.width > -100);
-    obstaclesRef.current.forEach(obs => obs.x -= currentSpeed);
-    obstaclesRef.current = obstaclesRef.current.filter(obs => obs.x + obs.width > -100);
+    // 4. Update Obstacles and Background Objects
+    obstaclesRef.current = obstaclesRef.current.map((obs: Obstacle) => ({
+      ...obs,
+      x: obs.x - obstacleSpeed
+    })).filter((obs: Obstacle) => obs.x + obs.width > -100);
+
+    bgObjectsRef.current = bgObjectsRef.current.map((obj: BackgroundObj) => ({
+      ...obj,
+      x: obj.x - obstacleSpeed * 0.5
+    })).filter((obj: BackgroundObj) => obj.x + obj.width > -50);
+
+    // 6. Update Branches (Level 2 Only)
+    if (levelRef.current === 2) {
+      if (frameCount.current % 100 === 0 && Math.random() < 0.3) {
+        branchesRef.current.push({
+          x: Math.random() * (GAME_WIDTH - 20),
+          y: -50,
+          width: 20,
+          height: 60,
+          id: branchIdRef.current++,
+          speed: 5 + Math.random() * 3
+        });
+      }
+
+      branchesRef.current = branchesRef.current.map((b: Branch) => ({
+        ...b,
+        y: b.y + b.speed
+      })).filter((b: Branch) => b.y < GAME_HEIGHT);
+    } else {
+      branchesRef.current = [];
+    }
+
+    // 7. Collision Detection
+    const checkCollision = (obj: GameObject) => {
+      return (
+        tolya.x < obj.x + obj.width &&
+        tolya.x + tolya.width > obj.x &&
+        tolya.y < obj.y + obj.height &&
+        tolya.y + tolya.height > obj.y
+      );
+    };
 
     for (let i = 0; i < obstaclesRef.current.length; i++) {
       const obs = obstaclesRef.current[i];
-      if (tolya.x < obs.x + obs.width && tolya.x + tolya.width > obs.x && tolya.y < obs.y + obs.height && tolya.y + tolya.height > obs.y) {
+      if (checkCollision(obs)) { // Use the new checkCollision function
         if (obs.isMushroom) {
           hasMushroomPowerRef.current = true;
           setHasMushroomPower(true);
@@ -322,7 +446,7 @@ export function App() {
           obstaclesRef.current.splice(i, 1);
           i--; continue;
         }
-        if (obs.isGiant) setLossReason('giant_bed');
+        if (obs.isGiant) setLossReason('giant');
         else if (obs.isMiniboss) setLossReason('miniboss');
         else setLossReason('normal');
         setGameState('lost');
@@ -344,6 +468,19 @@ export function App() {
         }
       }
     }
+
+    // Check for branch collisions
+    for (let i = 0; i < branchesRef.current.length; i++) {
+      const branch = branchesRef.current[i];
+      if (checkCollision(branch)) {
+        setLossReason('branch'); // New loss reason for branches
+        setGameState('lost');
+        keysPressed.current = {};
+        cancelAnimationFrame(requestRef.current);
+        if (scoreRef.current > highScore) setHighScore(scoreRef.current);
+        return;
+      }
+    }
   };
 
   const gameLoop = useCallback(() => {
@@ -357,6 +494,7 @@ export function App() {
     setTolya({ ...tolyaRef.current });
     setObstacles([...obstaclesRef.current]);
     setBgObjects([...bgObjectsRef.current]);
+    setBranches([...branchesRef.current]);
     if (gameStateRef.current === 'playing') requestRef.current = requestAnimationFrame(gameLoop);
   }, []);
 
@@ -433,7 +571,34 @@ export function App() {
             <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/grass.png')]"></div>
           </div>
 
-          {/* Entities */}
+          {level === 2 && (
+            <div
+              className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-1000"
+              style={{
+                background: `radial-gradient(circle 120px at ${tolya.x + tolya.width / 2}px ${tolya.y + tolya.height / 2}px, transparent 20%, rgba(0,0,0,0.85) 100%)`
+              }}
+            ></div>
+          )}
+
+          {/* entities */}
+          {branches.map((branch: Branch) => (
+            <div
+              key={branch.id}
+              className="absolute bg-amber-900 rounded-sm"
+              style={{
+                left: branch.x,
+                top: branch.y,
+                width: branch.width,
+                height: branch.height,
+                boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)'
+              }}
+            >
+              {/* Branch details (simple) */}
+              <div className="absolute top-1/4 left-0 w-full h-1 bg-amber-800 opacity-50"></div>
+              <div className="absolute top-1/2 left-0 w-full h-1 bg-amber-800 opacity-50"></div>
+            </div>
+          ))}
+
           {gameState !== 'won' && (
             <div
               className="absolute transition-transform bg-no-repeat bg-contain"
@@ -447,7 +612,7 @@ export function App() {
             </div>
           )}
 
-          {obstacles.map((obs) => (
+          {obstacles.map((obs: Obstacle) => (
             <div
               key={obs.id}
               className="absolute bg-no-repeat bg-contain"
@@ -460,6 +625,30 @@ export function App() {
             </div>
           ))}
 
+          {/* Level 2 Intro Screen */}
+          {showLevel2Intro && (
+            <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center bg-no-repeat bg-center bg-cover" style={{ backgroundImage: "url('./assets/lvl2.png')" }}>
+              <div className="bg-black/40 backdrop-blur-md p-10 rounded-3xl border border-white/20 shadow-2xl">
+                <h1 className="text-6xl font-black text-white mb-4 uppercase tracking-tighter drop-shadow-2xl">
+                  LEVEL 2
+                </h1>
+                <h2 className="text-3xl font-black text-indigo-300 mb-6 uppercase tracking-wider drop-shadow-xl">Тени сгущаются</h2>
+                <p className="text-white text-xl mb-10 max-w-sm font-medium">Лес погрузился во тьму... Теперь ты видишь только то, что рядом.</p>
+                <button
+                  onClick={() => {
+                    setShowLevel2Intro(false);
+                    setGameState('playing');
+                    gameStateRef.current = 'playing';
+                    requestRef.current = requestAnimationFrame(gameLoop);
+                  }}
+                  className="px-16 py-5 bg-indigo-600 text-white rounded-full font-black text-2xl hover:bg-indigo-500 transition-all transform hover:scale-110 active:scale-95 shadow-[0_0_30px_rgba(79,70,229,0.6)]"
+                >
+                  АНАТОЛИЙ
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Won Scene */}
           {gameState === 'won' && (
             <div className="absolute inset-0 bg-emerald-800/90 z-20 flex flex-col items-center justify-center animate-in fade-in duration-1000 p-8">
@@ -471,6 +660,15 @@ export function App() {
               >
                 <RotateCcw size={20} /> Играть снова
               </button>
+
+              {showLevel2Button && (
+                <button
+                  onClick={() => startLevel(2)}
+                  className="mt-4 flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-full font-black text-xl hover:bg-indigo-700 transition-all shadow-xl transform scale-110 hover:scale-125 active:scale-95 animate-bounce"
+                >
+                  <Play size={24} /> 2 УРОВЕНЬ
+                </button>
+              )}
             </div>
           )}
 
@@ -478,7 +676,7 @@ export function App() {
           {gameState === 'lost' && (
             <div className="absolute inset-0 bg-black/60 z-50 flex flex-col items-center justify-center backdrop-blur-sm p-4 text-center">
               <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl max-w-md w-full border-4 border-indigo-500 transform transition-all">
-                {lossReason === 'giant_bed' && (
+                {lossReason === 'giant' && (
                   <div className="flex justify-center mb-4">
                     <img src="./assets/end1.png" alt="End" className="max-h-48 rounded border-2 border-red-100 object-contain" />
                   </div>
@@ -493,12 +691,19 @@ export function App() {
                     <img src="./assets/end3.png" alt="End3" className="max-h-48 rounded border-2 border-red-100 object-contain" />
                   </div>
                 )}
+                {lossReason === 'branch' && (
+                  <div className="flex justify-center mb-4">
+                    <Skull size={64} className="text-red-500" />
+                  </div>
+                )}
 
                 <h2 className="text-3xl font-black text-red-600 mb-2 uppercase">
                   {lossReason === 'miniboss' ? 'НАПИЛСЯ ТЕПЕРЬ СТРАДАЕТ' :
                     lossReason === 'normal' ? 'ТЕБЯ ТРАХНУЛИ' :
-                      lossReason === 'giant_bed' ? 'СВЕТА взяла за гузно!' : 'ИГРА ОКОНЧЕНА'}
+                      lossReason === 'giant' ? 'СВЕТА взяла за гузно!' :
+                        lossReason === 'branch' ? 'ВЕТКА УПАЛА НА ГОЛОВУ!' : 'ИГРА ОКОНЧЕНА'}
                 </h2>
+                {lossReason === 'branch' && <p className="text-emerald-100 text-lg mb-6 max-w-xs text-center">Осторожно! Сверху тоже падают опасности!</p>}
                 <p className="text-slate-600 mb-6 font-bold truncate">Score: {score}</p>
 
                 <button
@@ -519,8 +724,8 @@ export function App() {
             <div className="flex gap-1 pointer-events-auto">
               <button
                 className="w-16 h-16 flex items-center justify-center active:scale-90 transition-transform"
-                onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = true; }}
-                onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = false; }}
+                onTouchStart={(e: React.TouchEvent) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = true; }}
+                onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = false; }}
               >
                 <div className="w-12 h-12 bg-white/10 backdrop-blur-[1px] rounded-full flex items-center justify-center border border-white/20">
                   <ArrowLeft size={24} className="text-white opacity-40" />
@@ -528,8 +733,8 @@ export function App() {
               </button>
               <button
                 className="w-16 h-16 flex items-center justify-center active:scale-90 transition-transform"
-                onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowRight'] = true; }}
-                onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowRight'] = false; }}
+                onTouchStart={(e: React.TouchEvent) => { e.preventDefault(); keysPressed.current['ArrowRight'] = true; }}
+                onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); keysPressed.current['ArrowRight'] = false; }}
               >
                 <div className="w-12 h-12 bg-white/10 backdrop-blur-[1px] rounded-full flex items-center justify-center border border-white/20">
                   <ArrowRight size={24} className="text-white opacity-40" />
@@ -539,14 +744,37 @@ export function App() {
             <div className="pointer-events-auto">
               <button
                 className="w-20 h-20 flex items-center justify-center active:scale-90 transition-transform"
-                onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowUp'] = true; }}
-                onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowUp'] = false; }}
+                onTouchStart={(e: React.TouchEvent) => { e.preventDefault(); keysPressed.current['ArrowUp'] = true; }}
+                onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); keysPressed.current['ArrowUp'] = false; }}
               >
                 <div className="w-16 h-16 bg-white/10 backdrop-blur-[1px] rounded-full flex items-center justify-center border border-white/20">
                   <ArrowUp size={32} className="text-white opacity-40" />
                 </div>
               </button>
             </div>
+          </div>
+        )}
+        {/* Level 2 Intro Screen */}
+        {showLevel2Intro && (
+          <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center">
+            <div className="animate-pulse mb-8">
+              <div className="w-64 h-64 bg-indigo-900/50 rounded-full flex items-center justify-center border-4 border-indigo-500 shadow-[0_0_50px_rgba(99,102,241,0.5)]">
+                <span className="text-white text-6xl font-black italic">LEVEL 2</span>
+              </div>
+            </div>
+            <h1 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter">Ночной Кошмар</h1>
+            <p className="text-indigo-300 text-xl mb-12 max-w-sm">Лес погрузился во тьму... Теперь ты видишь только то, что рядом.</p>
+            <button
+              onClick={() => {
+                setShowLevel2Intro(false);
+                setGameState('playing');
+                gameStateRef.current = 'playing';
+                requestRef.current = requestAnimationFrame(gameLoop);
+              }}
+              className="px-12 py-5 bg-white text-indigo-900 rounded-full font-black text-2xl hover:bg-indigo-50 transition-all transform hover:scale-110 active:scale-95 shadow-2xl"
+            >
+              ВБОЙ!
+            </button>
           </div>
         )}
       </div>
