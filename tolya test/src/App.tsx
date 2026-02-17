@@ -74,6 +74,7 @@ export function App() {
   const [showLevel2Button, setShowLevel2Button] = useState(false);
   const [showLevel2Intro, setShowLevel2Intro] = useState(false);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [showYappy, setShowYappy] = useState(false);
 
   // Scale handling
   const [scale, setScale] = useState(1);
@@ -468,8 +469,22 @@ export function App() {
         obs.passed = true;
         const points = isDevModeRef.current ? 50 : 1;
         console.log('🎮 Developer Mode:', isDevModeRef.current, '| Points awarded:', points);
+
+        const oldScore = scoreRef.current;
         scoreRef.current += points;
         setScore(scoreRef.current);
+
+        // Yappy Logic: Every 5th point (5, 10, 15... 45), except 50, with 50% probability
+        const newScore = scoreRef.current;
+        if (newScore < 50 && newScore % 5 === 0 && Math.floor(oldScore / 5) < Math.floor(newScore / 5)) {
+          if (Math.random() < 0.5) {
+            setShowYappy(true);
+            const audio = new Audio('./assets/yappy.mp3');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+            setTimeout(() => setShowYappy(false), 1500);
+          }
+        }
+
         if (hasMushroomPowerRef.current && !obs.isMushroom) {
           mushroomPowerCounterRef.current += 1;
           if (mushroomPowerCounterRef.current >= 5) {
@@ -735,8 +750,8 @@ export function App() {
                   </div>
                 )}
                 {lossReason === 'branch' && (
-                  <div className="flex justify-center mb-4">
-                    <Skull size={64} className="text-red-500" />
+                  <div className="flex justify-center mb-4 text-center">
+                    <img src="./assets/end4.png" alt="End4" className="max-h-48 rounded border-2 border-red-100 object-contain" />
                   </div>
                 )}
 
@@ -744,7 +759,7 @@ export function App() {
                   {lossReason === 'miniboss' ? 'НАПИЛСЯ ТЕПЕРЬ СТРАДАЕТ' :
                     lossReason === 'normal' ? 'ТЕБЯ ТРАХНУЛИ' :
                       lossReason === 'giant' ? 'СВЕТА взяла за гузно!' :
-                        lossReason === 'branch' ? 'ВЕТКА УПАЛА НА ГОЛОВУ!' : 'ИГРА ОКОНЧЕНА'}
+                        lossReason === 'branch' ? 'СОРЯН ВЕТКА В БАШКУ' : 'ИГРА ОКОНЧЕНА'}
                 </h2>
                 {lossReason === 'branch' && <p className="text-emerald-100 text-lg mb-6 max-w-xs text-center">Осторожно! Сверху тоже падают опасности!</p>}
                 <p className="text-slate-600 mb-6 font-bold text-center">Score: {score}</p>
@@ -783,6 +798,12 @@ export function App() {
                   <ArrowRight size={24} className="text-white opacity-40" />
                 </div>
               </button>
+              {/* Yappy Popup */}
+              {showYappy && (
+                <div className="absolute bottom-0 left-0 w-full flex justify-center z-[70] pointer-events-none animate-in slide-in-from-bottom duration-500">
+                  <img src="./assets/yappy.png" alt="Yappy!" className="w-32 h-32 object-contain" />
+                </div>
+              )}
             </div>
             <div className="pointer-events-auto">
               <button
