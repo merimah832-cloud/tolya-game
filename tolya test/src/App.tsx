@@ -515,30 +515,36 @@ export function App() {
 
         {/* Mobile Controls Overlay (Moved inside inner container for correct scaling) */}
         {(isTouchDevice && gameState === 'playing') && (
-          <div className="absolute bottom-0 left-0 w-full px-2 flex justify-between items-end z-40 pointer-events-none pb-0.5">
-            <div className="flex gap-2 pointer-events-auto">
+          <div className="absolute bottom-0 left-0 w-full px-1 flex justify-between items-end z-40 pointer-events-none pb-1">
+            <div className="flex gap-1 pointer-events-auto">
               <button
-                className="w-10 h-10 bg-white/10 backdrop-blur-[2px] rounded-full flex items-center justify-center border border-white/20 active:bg-white/30 transition-colors"
+                className="w-16 h-16 flex items-center justify-center active:scale-90 transition-transform"
                 onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowLeft'] = false; }}
               >
-                <ArrowLeft size={20} className="text-white opacity-40" />
+                <div className="w-12 h-12 bg-white/10 backdrop-blur-[1px] rounded-full flex items-center justify-center border border-white/20">
+                  <ArrowLeft size={24} className="text-white opacity-40" />
+                </div>
               </button>
               <button
-                className="w-10 h-10 bg-white/10 backdrop-blur-[2px] rounded-full flex items-center justify-center border border-white/20 active:bg-white/30 transition-colors"
+                className="w-16 h-16 flex items-center justify-center active:scale-90 transition-transform"
                 onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowRight'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowRight'] = false; }}
               >
-                <ArrowRight size={20} className="text-white opacity-40" />
+                <div className="w-12 h-12 bg-white/10 backdrop-blur-[1px] rounded-full flex items-center justify-center border border-white/20">
+                  <ArrowRight size={24} className="text-white opacity-40" />
+                </div>
               </button>
             </div>
             <div className="pointer-events-auto">
               <button
-                className="w-12 h-12 bg-white/10 backdrop-blur-[2px] rounded-full flex items-center justify-center border border-white/20 active:bg-white/30 transition-colors"
+                className="w-20 h-20 flex items-center justify-center active:scale-90 transition-transform"
                 onTouchStart={(e) => { e.preventDefault(); keysPressed.current['ArrowUp'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysPressed.current['ArrowUp'] = false; }}
               >
-                <ArrowUp size={24} className="text-white opacity-40" />
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-[1px] rounded-full flex items-center justify-center border border-white/20">
+                  <ArrowUp size={32} className="text-white opacity-40" />
+                </div>
               </button>
             </div>
           </div>
