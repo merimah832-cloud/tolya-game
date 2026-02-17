@@ -460,6 +460,7 @@ export function App() {
       if (!obs.passed && tolya.x > obs.x + obs.width) {
         obs.passed = true;
         const points = isDevModeRef.current ? 50 : 1;
+        console.log('🎮 Developer Mode:', isDevModeRef.current, '| Points awarded:', points);
         scoreRef.current += points;
         setScore(scoreRef.current);
         if (hasMushroomPowerRef.current && !obs.isMushroom) {
@@ -525,6 +526,7 @@ export function App() {
               onPlay={startGame}
               onToggleFullscreen={handleToggleFullscreen}
               onEnableDevMode={() => {
+                console.log('✅ Developer Mode ACTIVATED');
                 setIsDevMode(true);
                 isDevModeRef.current = true;
               }}
