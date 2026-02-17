@@ -644,25 +644,45 @@ export function App() {
 
           {/* Level 2 Intro Screen */}
           {showLevel2Intro && (
-            <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center bg-no-repeat bg-center bg-cover" style={{ backgroundImage: "url('./assets/lvl2.png')" }}>
-              <div className="bg-black/40 backdrop-blur-md p-10 rounded-3xl border border-white/20 shadow-2xl">
-                <h1 className="text-6xl font-black text-white mb-4 uppercase tracking-tighter drop-shadow-2xl">
-                  LEVEL 2
+            <div
+              className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-between py-12 px-8 text-center bg-no-repeat bg-center bg-cover"
+              style={{ backgroundImage: "url('./assets/lvl2.png')" }}
+            >
+              {/* Top: Restart Button */}
+              <button
+                onClick={startGame}
+                className="group flex flex-col items-center animate-in slide-in-from-top duration-1000"
+              >
+                <h1 className="text-4xl font-black text-white/80 uppercase tracking-tighter drop-shadow-2xl group-hover:text-white transition-colors">
+                  Тени сгущаются
                 </h1>
-                <h2 className="text-3xl font-black text-indigo-300 mb-6 uppercase tracking-wider drop-shadow-xl">Тени сгущаются</h2>
-                <p className="text-white text-xl mb-10 max-w-sm font-medium">Лес погрузился во тьму... Теперь ты видишь только то, что рядом.</p>
-                <button
-                  onClick={() => {
-                    setShowLevel2Intro(false);
-                    setGameState('playing');
-                    gameStateRef.current = 'playing';
-                    requestRef.current = requestAnimationFrame(gameLoop);
-                  }}
-                  className="px-16 py-5 bg-indigo-600 text-white rounded-full font-black text-2xl hover:bg-indigo-500 transition-all transform hover:scale-110 active:scale-95 shadow-[0_0_30px_rgba(79,70,229,0.6)]"
-                >
-                  АНАТОЛИЙ
-                </button>
+                <div className="h-1 w-0 group-hover:w-32 bg-red-500 transition-all duration-500"></div>
+                <p className="text-white/40 text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity uppercase">Начать заново</p>
+              </button>
+
+              <div className="bg-black/40 backdrop-blur-sm p-6 rounded-2xl border border-white/10 max-w-sm mb-4">
+                <p className="text-indigo-200 text-lg font-medium italic">
+                  Лес погрузился во тьму... Теперь ты видишь только то, что рядом.
+                </p>
               </div>
+
+              {/* Bottom: Start Level 2 Button */}
+              <button
+                onClick={() => {
+                  setShowLevel2Intro(false);
+                  setGameState('playing');
+                  gameStateRef.current = 'playing';
+                  requestRef.current = requestAnimationFrame(gameLoop);
+                }}
+                className="flex flex-col items-center gap-4 transition-all transform hover:scale-110 active:scale-95 animate-in slide-in-from-bottom duration-1000"
+              >
+                <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center border-4 border-indigo-400 shadow-[0_0_20px_rgba(129,140,248,0.5)] overflow-hidden p-2">
+                  <TolyaImage isJumping={false} direction="right" />
+                </div>
+                <div className="bg-white text-indigo-900 px-10 py-3 rounded-full font-black text-2xl shadow-2xl">
+                  АНАТОЛИЙ
+                </div>
+              </button>
             </div>
           )}
 
@@ -718,14 +738,14 @@ export function App() {
                   </div>
                 )}
 
-                <h2 className="text-3xl font-black text-red-600 mb-2 uppercase">
+                <h2 className="text-3xl font-black text-red-600 mb-2 uppercase text-center">
                   {lossReason === 'miniboss' ? 'НАПИЛСЯ ТЕПЕРЬ СТРАДАЕТ' :
                     lossReason === 'normal' ? 'ТЕБЯ ТРАХНУЛИ' :
                       lossReason === 'giant' ? 'СВЕТА взяла за гузно!' :
                         lossReason === 'branch' ? 'ВЕТКА УПАЛА НА ГОЛОВУ!' : 'ИГРА ОКОНЧЕНА'}
                 </h2>
                 {lossReason === 'branch' && <p className="text-emerald-100 text-lg mb-6 max-w-xs text-center">Осторожно! Сверху тоже падают опасности!</p>}
-                <p className="text-slate-600 mb-6 font-bold truncate">Score: {score}</p>
+                <p className="text-slate-600 mb-6 font-bold text-center">Score: {score}</p>
 
                 <button
                   onClick={startGame}
@@ -739,7 +759,7 @@ export function App() {
           )}
         </div>
 
-        {/* Mobile Controls Overlay (Moved inside inner container for correct scaling) */}
+        {/* Mobile Controls Overlay */}
         {(isTouchDevice && gameState === 'playing') && (
           <div className="absolute bottom-0 left-0 w-full px-1 flex justify-between items-end z-40 pointer-events-none pb-1">
             <div className="flex gap-1 pointer-events-auto">
@@ -773,29 +793,6 @@ export function App() {
                 </div>
               </button>
             </div>
-          </div>
-        )}
-        {/* Level 2 Intro Screen */}
-        {showLevel2Intro && (
-          <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center">
-            <div className="animate-pulse mb-8">
-              <div className="w-64 h-64 bg-indigo-900/50 rounded-full flex items-center justify-center border-4 border-indigo-500 shadow-[0_0_50px_rgba(99,102,241,0.5)]">
-                <span className="text-white text-6xl font-black italic">LEVEL 2</span>
-              </div>
-            </div>
-            <h1 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter">Ночной Кошмар</h1>
-            <p className="text-indigo-300 text-xl mb-12 max-w-sm">Лес погрузился во тьму... Теперь ты видишь только то, что рядом.</p>
-            <button
-              onClick={() => {
-                setShowLevel2Intro(false);
-                setGameState('playing');
-                gameStateRef.current = 'playing';
-                requestRef.current = requestAnimationFrame(gameLoop);
-              }}
-              className="px-12 py-5 bg-white text-indigo-900 rounded-full font-black text-2xl hover:bg-indigo-50 transition-all transform hover:scale-110 active:scale-95 shadow-2xl"
-            >
-              ВБОЙ!
-            </button>
           </div>
         )}
       </div>
