@@ -73,6 +73,7 @@ export function App() {
   const [level, setLevel] = useState(1);
   const [showLevel2Button, setShowLevel2Button] = useState(false);
   const [showLevel2Intro, setShowLevel2Intro] = useState(false);
+  const [isDevMode, setIsDevMode] = useState(false);
 
   // Scale handling
   const [scale, setScale] = useState(1);
@@ -457,7 +458,8 @@ export function App() {
       }
       if (!obs.passed && tolya.x > obs.x + obs.width) {
         obs.passed = true;
-        scoreRef.current += 1;
+        const points = isDevMode ? 50 : 1;
+        scoreRef.current += points;
         setScore(scoreRef.current);
         if (hasMushroomPowerRef.current && !obs.isMushroom) {
           mushroomPowerCounterRef.current += 1;
@@ -518,7 +520,11 @@ export function App() {
 
           {/* Start Menu */}
           {gameState === 'menu' && (
-            <StartMenu onPlay={startGame} onToggleFullscreen={handleToggleFullscreen} />
+            <StartMenu
+              onPlay={startGame}
+              onToggleFullscreen={handleToggleFullscreen}
+              onEnableDevMode={() => setIsDevMode(true)}
+            />
           )}
 
           {/* Parallax Background */}

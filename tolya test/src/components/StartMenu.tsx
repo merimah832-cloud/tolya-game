@@ -3,9 +3,10 @@ import React from 'react';
 interface StartMenuProps {
     onPlay: () => void;
     onToggleFullscreen: () => void;
+    onEnableDevMode: () => void;
 }
 
-const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen }) => {
+const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen, onEnableDevMode }) => {
     // Set this to 'false' once you have perfectly aligned the buttons!
     const [showDebug, setShowDebug] = React.useState(false);
 
@@ -19,6 +20,20 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen }) => 
                     backgroundColor: '#1a2e1a'
                 }}
             />
+
+            {/* Developer Mode Trigger */}
+            <div
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-50 text-white/20 hover:text-white/50 cursor-pointer text-xl font-black p-2 transition-colors select-none"
+                onClick={() => {
+                    const pass = window.prompt("Введите код разработчика:");
+                    if (pass === "1345") {
+                        onEnableDevMode();
+                        alert("Режим разработчика активирован! (1 прыжок = 50 очков)");
+                    }
+                }}
+            >
+                !
+            </div>
 
             {/* Debug Toggle (Click anywhere empty to toggle visibility of zones) */}
             <div
