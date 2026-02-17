@@ -267,7 +267,11 @@ export function App() {
     obstaclesRef.current = [];
     isMinibossActiveRef.current = false;
     hasSpawnedMinibossRef.current = false;
-    // NOTE: isDevModeRef is NOT reset here - it persists across levels
+
+    // Reset Developer Mode when starting Level 2
+    isDevModeRef.current = false;
+    setIsDevMode(false);
+    console.log('🔄 Developer Mode RESET for Level 2');
 
     gameStateRef.current = 'playing';
     setGameState('playing');
