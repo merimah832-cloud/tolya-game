@@ -207,6 +207,8 @@ export function App() {
 
     setGameState('playing');
     gameStateRef.current = 'playing';
+    setLevel(1);
+    levelRef.current = 1;
     keysPressed.current = {};
     setLossReason('normal');
     setScore(0);
