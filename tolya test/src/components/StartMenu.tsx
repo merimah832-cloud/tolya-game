@@ -24,7 +24,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen, onEna
             {/* Developer Mode Trigger - centered and high z-index */}
             <div
                 onClick={() => {
-                    const pass = window.prompt("Введите код разработчика (1345):");
+                    const pass = window.prompt("Введите код:");
                     if (pass === "1345") {
                         onEnableDevMode();
                         alert("✅ РЕЖИМ РАЗРАБОТЧИКА АКТИВИРОВАН!\n(1 прыжок = 50 очков)");

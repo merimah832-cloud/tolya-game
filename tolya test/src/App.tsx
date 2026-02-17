@@ -90,6 +90,7 @@ export function App() {
   const hasMushroomPowerRef = useRef(false);
   const hasSpawnedMushroomRef = useRef(false);
   const mushroomPowerCounterRef = useRef(0);
+  const isDevModeRef = useRef(false);
   const tolyaRef = useRef<TolyaState>({
     x: 50,
     y: 0,
@@ -458,7 +459,7 @@ export function App() {
       }
       if (!obs.passed && tolya.x > obs.x + obs.width) {
         obs.passed = true;
-        const points = isDevMode ? 50 : 1;
+        const points = isDevModeRef.current ? 50 : 1;
         scoreRef.current += points;
         setScore(scoreRef.current);
         if (hasMushroomPowerRef.current && !obs.isMushroom) {
@@ -523,7 +524,10 @@ export function App() {
             <StartMenu
               onPlay={startGame}
               onToggleFullscreen={handleToggleFullscreen}
-              onEnableDevMode={() => setIsDevMode(true)}
+              onEnableDevMode={() => {
+                setIsDevMode(true);
+                isDevModeRef.current = true;
+              }}
             />
           )}
 
