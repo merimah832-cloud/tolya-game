@@ -23,20 +23,24 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen, onEna
 
             {/* Developer Mode Trigger */}
             <div
-                className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 cursor-pointer font-black transition-all select-none flex items-center justify-center
+                className={`absolute left-1/2 -translate-x-1/2 z-[100] cursor-pointer font-black transition-all select-none flex flex-col items-center justify-center
                     ${showDebug
-                        ? 'text-white bg-red-600 border-4 border-white scale-125 text-5xl w-24 h-24 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.9)] animate-bounce'
-                        : 'text-white/10 hover:text-white/30 text-xl p-2'}`}
+                        ? 'top-20 text-white bg-red-600 border-8 border-white scale-125 text-6xl w-32 h-32 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,1)] animate-bounce'
+                        : 'top-2 text-white/5 hover:text-white/20 text-lg w-8 h-8 rounded-full border border-transparent hover:border-white/10'}`}
                 onClick={() => {
-                    const pass = window.prompt("Введите код разработчика:");
+                    const pass = window.prompt("Введите код разработчика (1345):");
                     if (pass === "1345") {
                         onEnableDevMode();
-                        alert("Режим разработчика активирован! (1 прыжок = 50 очков)");
+                        alert("✅ РЕЖИМ РАЗРАБОТЧИКА АКТИВИРОВАН!\n(1 прыжок = 50 очков)");
                     }
                 }}
             >
                 !
-                {showDebug && <span className="absolute -bottom-8 text-[10px] font-bold bg-black/80 px-2 py-0.5 rounded whitespace-nowrap">DEV MODE</span>}
+                {showDebug && (
+                    <div className="mt-2 bg-black text-white text-xs px-2 py-1 rounded font-bold uppercase tracking-widest whitespace-nowrap">
+                        КНОПКА РАЗРАБОТЧИКА
+                    </div>
+                )}
             </div>
 
             {/* Debug Toggle (Click anywhere empty to toggle visibility of zones) */}
