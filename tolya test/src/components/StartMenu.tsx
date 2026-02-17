@@ -21,12 +21,8 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen, onEna
                 }}
             />
 
-            {/* Developer Mode Trigger */}
+            {/* Developer Mode Trigger - centered and high z-index */}
             <div
-                className={`absolute left-1/2 -translate-x-1/2 z-[100] cursor-pointer font-black transition-all select-none flex flex-col items-center justify-center
-                    ${showDebug
-                        ? 'top-20 text-white bg-red-600 border-8 border-white scale-125 text-6xl w-32 h-32 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,1)] animate-bounce'
-                        : 'top-2 text-white/5 hover:text-white/20 text-lg w-8 h-8 rounded-full border border-transparent hover:border-white/10'}`}
                 onClick={() => {
                     const pass = window.prompt("Введите код разработчика (1345):");
                     if (pass === "1345") {
@@ -34,10 +30,34 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlay, onToggleFullscreen, onEna
                         alert("✅ РЕЖИМ РАЗРАБОТЧИКА АКТИВИРОВАН!\n(1 прыжок = 50 очков)");
                     }
                 }}
+                className={`absolute left-1/2 -translate-x-1/2 z-[100] cursor-pointer font-black transition-all select-none flex flex-col items-center justify-center`}
+                style={{
+                    top: showDebug ? '80px' : '10px',
+                    width: showDebug ? '120px' : '30px',
+                    height: showDebug ? '120px' : '30px',
+                    backgroundColor: showDebug ? '#ef4444' : 'rgba(255,255,255,0.05)',
+                    borderRadius: showDebug ? '20px' : '50%',
+                    border: showDebug ? '4px solid white' : '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: showDebug ? '0 0 40px rgba(239, 68, 68, 0.8)' : 'none',
+                    color: 'white',
+                    fontSize: showDebug ? '64px' : '16px',
+                }}
             >
                 !
                 {showDebug && (
-                    <div className="mt-2 bg-black text-white text-xs px-2 py-1 rounded font-bold uppercase tracking-widest whitespace-nowrap">
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '-40px',
+                        backgroundColor: 'black',
+                        color: 'white',
+                        fontSize: '12px',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        whiteSpace: 'nowrap',
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                        border: '1px solid #ef4444'
+                    }}>
                         КНОПКА РАЗРАБОТЧИКА
                     </div>
                 )}
