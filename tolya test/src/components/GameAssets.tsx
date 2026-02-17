@@ -149,7 +149,7 @@ export const WinImage = () => {
     <img
       src="./assets/win.png"
       alt="Tolya found the hole!"
-      className="max-w-md w-full rounded-xl shadow-2xl border-4 border-emerald-300"
+      className="max-w-[250px] w-full rounded-xl shadow-2xl border-4 border-emerald-300"
       onError={() => setError(true)}
     />
   );

@@ -644,7 +644,7 @@ export function App() {
 
           {/* Level 2 Intro Screen */}
           {showLevel2Intro && (
-            <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center bg-no-repeat bg-center bg-cover" style={{ backgroundImage: "url('/assets/lvl2.png')" }}>
+            <div className="absolute inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 text-center bg-no-repeat bg-center bg-cover" style={{ backgroundImage: "url('./assets/lvl2.png')" }}>
               <div className="bg-black/40 backdrop-blur-md p-10 rounded-3xl border border-white/20 shadow-2xl">
                 <h1 className="text-6xl font-black text-white mb-4 uppercase tracking-tighter drop-shadow-2xl">
                   LEVEL 2
@@ -668,25 +668,27 @@ export function App() {
 
           {/* Won Scene */}
           {gameState === 'won' && (
-            <div className="absolute inset-0 bg-emerald-800/90 z-20 flex flex-col items-center justify-center animate-in fade-in duration-1000 p-4 overflow-y-auto">
-              <div className="flex flex-col items-center justify-center max-w-2xl w-full">
+            <div className="absolute inset-0 bg-emerald-800/90 z-20 flex flex-col items-center justify-center animate-in fade-in duration-1000 p-2 overflow-y-auto">
+              <div className="flex flex-col items-center justify-center max-w-2xl w-full scale-90 sm:scale-100">
                 <WinImage />
-                <h2 className="text-4xl font-bold text-emerald-100 mt-8 text-center drop-shadow-lg">Толя нашел лунку!</h2>
-                <button
-                  onClick={startGame}
-                  className="mt-8 flex items-center gap-2 px-6 py-3 bg-white text-emerald-800 rounded-full font-bold hover:bg-emerald-100 transition-colors shadow-lg transform hover:scale-105 active:scale-95"
-                >
-                  <RotateCcw size={20} /> Играть снова
-                </button>
-
-                {showLevel2Button && (
+                <h2 className="text-3xl font-bold text-emerald-100 mt-4 text-center drop-shadow-lg">Толя нашел лунку!</h2>
+                <div className="flex flex-col gap-3 mt-6">
                   <button
-                    onClick={() => startLevel(2)}
-                    className="mt-4 flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-full font-black text-xl hover:bg-indigo-700 transition-all shadow-xl transform hover:scale-110 active:scale-95"
+                    onClick={startGame}
+                    className="flex items-center justify-center gap-2 px-6 py-2 bg-white text-emerald-800 rounded-full font-bold hover:bg-emerald-100 transition-colors shadow-lg transform active:scale-95"
                   >
-                    <Sparkles size={24} /> LEVEL 2
+                    <RotateCcw size={18} /> Играть снова
                   </button>
-                )}
+
+                  {showLevel2Button && (
+                    <button
+                      onClick={() => startLevel(2)}
+                      className="flex items-center justify-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-full font-black text-lg hover:bg-indigo-700 transition-all shadow-xl transform active:scale-95 animate-pulse"
+                    >
+                      <Sparkles size={20} /> LEVEL 2
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
