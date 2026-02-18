@@ -22,7 +22,8 @@ const MINIBOSS_HEIGHT = 70;
 const OBSTACLE_SPEED_NORMAL = 6;
 const OBSTACLE_SPEED_FAST = 7;
 const OBSTACLE_SPEED_MAX = 8;
-const WIN_SCORE = 50;
+const WIN_SCORE_LVL1 = 50;
+const WIN_SCORE_LVL2 = 100;
 const MINIBOSS_SCORE_TRIGGER = 25;
 const MAX_SPEED_SCORE_TRIGGER = 40;
 
@@ -513,7 +514,8 @@ export function App() {
 
   const gameLoop = useCallback(() => {
     if (gameStateRef.current !== 'playing') return;
-    if (scoreRef.current >= WIN_SCORE) { setGameState('won'); return; }
+    const targetWinScore = levelRef.current === 2 ? WIN_SCORE_LVL2 : WIN_SCORE_LVL1;
+    if (scoreRef.current >= targetWinScore) { setGameState('won'); return; }
     if (scoreRef.current >= MINIBOSS_SCORE_TRIGGER && !isMinibossActiveRef.current) {
       isMinibossActiveRef.current = true;
       if (!hasSpawnedMinibossRef.current) setShowWarning(true);
@@ -581,7 +583,7 @@ export function App() {
             </div>
             <div className="flex flex-col gap-2 items-end origin-top-right transition-transform" style={{ transform: 'scale(0.8)' }}>
               <div className="bg-white/90 px-4 py-2 rounded-lg shadow font-mono text-2xl font-bold text-indigo-600 border-2 border-indigo-200">
-                Score: {score} / {WIN_SCORE}
+                Score: {score} / {level === 2 ? WIN_SCORE_LVL2 : WIN_SCORE_LVL1}
               </div>
               {highScore > 0 && (
                 <div className="bg-yellow-100/90 px-3 py-1 rounded text-sm font-bold text-yellow-700 border border-yellow-300">
