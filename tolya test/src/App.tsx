@@ -276,9 +276,11 @@ export function App() {
     setIsDevMode(false);
     console.log('🔄 Developer Mode RESET for Level 2');
 
-    gameStateRef.current = 'playing';
-    setGameState('playing');
-    requestRef.current = requestAnimationFrame(gameLoop);
+    if (levelIndex !== 2) {
+      gameStateRef.current = 'playing';
+      setGameState('playing');
+      requestRef.current = requestAnimationFrame(gameLoop);
+    }
   };
 
   const updatePhysics = () => {
