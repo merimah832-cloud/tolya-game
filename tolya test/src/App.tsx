@@ -736,8 +736,8 @@ export function App() {
 
           {/* Game Over (Lost) */}
           {gameState === 'lost' && (
-            <div className="absolute inset-0 bg-black/60 z-50 flex flex-col items-center justify-center backdrop-blur-sm p-4 text-center">
-              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl max-w-md w-full border-4 border-indigo-500 transform transition-all">
+            <div className="absolute inset-0 bg-black/60 z-50 flex flex-col items-center justify-center backdrop-blur-sm p-2 text-center">
+              <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full border-4 border-indigo-500 transform transition-all max-h-[95vh] overflow-y-auto scale-90 sm:scale-100">
                 {lossReason === 'giant' && (
                   <div className="flex justify-center mb-4">
                     <img src="./assets/end1.png" alt="End" className="max-h-48 rounded border-2 border-red-100 object-contain" />
@@ -755,17 +755,16 @@ export function App() {
                 )}
                 {lossReason === 'branch' && (
                   <div className="flex justify-center mb-4 text-center">
-                    <img src="./assets/end4.png" alt="End4" className="max-h-48 rounded border-2 border-red-100 object-contain" />
+                    <img src="./assets/end4.png" alt="End4" className="max-h-64 rounded border-2 border-red-100 object-contain shadow-lg" />
                   </div>
                 )}
 
-                <h2 className="text-3xl font-black text-red-600 mb-2 uppercase text-center">
+                <h2 className={`${lossReason === 'branch' ? 'text-2xl' : 'text-3xl'} font-black text-red-600 mb-2 uppercase text-center`}>
                   {lossReason === 'miniboss' ? 'НАПИЛСЯ ТЕПЕРЬ СТРАДАЕТ' :
                     lossReason === 'normal' ? 'ТЕБЯ ТРАХНУЛИ' :
                       lossReason === 'giant' ? 'СВЕТА взяла за гузно!' :
                         lossReason === 'branch' ? 'СОРЯН ВЕТКА В БАШКУ' : 'ИГРА ОКОНЧЕНА'}
                 </h2>
-                {lossReason === 'branch' && <p className="text-emerald-100 text-lg mb-6 max-w-xs text-center">Осторожно! Сверху тоже падают опасности!</p>}
                 <p className="text-slate-600 mb-6 font-bold text-center">Score: {score}</p>
 
                 <button
